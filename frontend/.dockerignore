@@ -12,4 +12,3 @@ dist
 .vscode
 .idea
 *.log
-nginx.conf

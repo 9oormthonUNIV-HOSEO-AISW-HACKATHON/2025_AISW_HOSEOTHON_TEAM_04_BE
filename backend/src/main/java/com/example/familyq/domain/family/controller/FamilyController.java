@@ -83,6 +83,20 @@ public class FamilyController {
         return ResponseEntity.ok(familyService.getMyFamily(loginUser.getUserId()));
     }
 
+    @Operation(summary = "질문 시작", description = "가족 구성원이 모두 모인 후 질문을 시작합니다.")
+    @SecurityRequirement(name = "SESSION")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "질문 시작 성공"),
+            @ApiResponse(responseCode = "400", description = "가족 인원이 부족하거나 준비되지 않음"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/start-questions")
+    public ResponseEntity<FamilyResponse> startQuestions(
+            @Parameter(hidden = true) @LoginUser LoginUserInfo loginUser) {
+        return ResponseEntity.ok(familyService.startQuestions(loginUser.getUserId()));
+    }
+
     private void refreshSession(HttpSession session, Long userId) {
         LoginUserInfo updated = LoginUserInfo.from(userService.getUser(userId));
         session.setAttribute(SessionConst.LOGIN_USER, updated);

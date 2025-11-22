@@ -84,4 +84,8 @@ public class FamilyQuestion extends BaseTimeEntity {
     public void addAnswer(Answer answer) {
         this.answers.add(answer);
     }
+
+    public void updateRequiredMemberCount(int requiredMemberCount) {
+        this.requiredMemberCount = requiredMemberCount;
+    }
 }

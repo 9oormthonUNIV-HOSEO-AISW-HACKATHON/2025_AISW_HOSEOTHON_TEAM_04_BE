@@ -19,10 +19,12 @@ public class QuestionDetailResponse {
     private final LocalDate assignedDate;
     private final LocalDateTime completedAt;
     private final boolean completed;
+    private final AnswerResponse myAnswer;
     private final List<AnswerResponse> answers;
     private final InsightResponse insight;
 
     public static QuestionDetailResponse of(FamilyQuestion familyQuestion,
+                                            AnswerResponse myAnswer,
                                             List<AnswerResponse> answers,
                                             InsightResponse insight) {
         return QuestionDetailResponse.builder()
@@ -32,6 +34,7 @@ public class QuestionDetailResponse {
                 .assignedDate(familyQuestion.getAssignedDate())
                 .completedAt(familyQuestion.getCompletedAt())
                 .completed(familyQuestion.isCompleted())
+                .myAnswer(myAnswer)
                 .answers(answers)
                 .insight(insight)
                 .build();

@@ -18,6 +18,12 @@ const familyAPI = {
     const response = await apiClient.get('/families/me');
     return response.data;
   },
+
+  // 질문 시작
+  startQuestions: async () => {
+    const response = await apiClient.post('/families/start-questions');
+    return response.data;
+  },
 };
 
 export default familyAPI;

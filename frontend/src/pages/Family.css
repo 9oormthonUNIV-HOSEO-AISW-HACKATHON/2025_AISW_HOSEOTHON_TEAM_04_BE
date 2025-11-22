@@ -209,3 +209,27 @@
   font-size: 14px;
   color: #666;
 }
+
+.family-question-start-card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.family-question-start-card h2 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.family-question-start-card p {
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.hint-text {
+  margin-top: 6px;
+  color: #777;
+  font-size: 14px;
+}

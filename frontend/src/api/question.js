@@ -42,6 +42,18 @@ const questionAPI = {
     const response = await apiClient.delete(`/admin/questions/${questionId}`);
     return response.data;
   },
+
+  // 디버깅용 - 질문 새로고침
+  refreshQuestion: async (userId) => {
+    const response = await apiClient.post(`/admin/questions/refresh/${userId}`);
+    return response.data;
+  },
+
+  // 디버깅용 - 다음 질문으로 건너뛰기
+  skipToNextQuestion: async (userId) => {
+    const response = await apiClient.post(`/admin/questions/skip-to-next/${userId}`);
+    return response.data;
+  },
 };
 
 export default questionAPI;

@@ -7,18 +7,22 @@ import './Home.css';
 const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const showDebugControls = import.meta.env.DEV || import.meta.env.VITE_SHOW_DEBUG_BUTTONS === 'true';
   const [todayQuestion, setTodayQuestion] = useState(null);
   const [family, setFamily] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startLoading, setStartLoading] = useState(false);
+  const [startError, setStartError] = useState('');
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [user]);
 
   const loadData = async () => {
     setLoading(true);
     setError(null);
+    setStartError('');
 
     try {
       // 가족 정보 확인
@@ -27,8 +31,12 @@ const Home = () => {
         setFamily(familyData);
 
         // 오늘의 질문 가져오기
-        const questionData = await questionAPI.getTodayQuestion();
-        setTodayQuestion(questionData);
+        if (familyData.questionsStarted) {
+          const questionData = await questionAPI.getTodayQuestion();
+          setTodayQuestion(questionData);
+        } else {
+          setTodayQuestion(null);
+        }
       }
     } catch (err) {
       if (err.response?.status !== 400) {
@@ -42,6 +50,53 @@ const Home = () => {
   const handleAnswerSubmit = () => {
     if (todayQuestion) {
       navigate(`/questions/${todayQuestion.familyQuestionId}`);
+    }
+  };
+
+  const handleRefreshQuestion = async () => {
+    try {
+      setLoading(true);
+      await questionAPI.refreshQuestion(user.id);
+      await loadData();
+    } catch (err) {
+      console.error('질문 새로고침 실패:', err);
+      setError('질문 새로고침에 실패했습니다. 관리자 권한이 필요합니다.');
+      setLoading(false);
+    }
+  };
+
+  const handleSkipToNext = async () => {
+    if (!window.confirm('현재 질문을 완료 처리하고 다음 질문으로 넘어갑니다. 계속하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await questionAPI.skipToNextQuestion(user.id);
+      await loadData();
+    } catch (err) {
+      console.error('다음 질문으로 건너뛰기 실패:', err);
+      setError('다음 질문으로 건너뛰기에 실패했습니다. 관리자 권한이 필요합니다.');
+      setLoading(false);
+    }
+  };
+
+  const handleStartQuestions = async () => {
+    setStartLoading(true);
+    setStartError('');
+    setError(null);
+    try {
+      const updatedFamily = await familyAPI.startQuestions();
+      setFamily(updatedFamily);
+
+      if (updatedFamily.questionsStarted) {
+        const questionData = await questionAPI.getTodayQuestion();
+        setTodayQuestion(questionData);
+      }
+    } catch (err) {
+      setStartError(err.response?.data?.message || '질문을 시작하는 중 오류가 발생했습니다.');
+    } finally {
+      setStartLoading(false);
     }
   };
 
@@ -89,6 +144,9 @@ const Home = () => {
   const questionDate = todayQuestion?.assignedDate
     ? new Date(todayQuestion.assignedDate).toLocaleDateString()
     : '';
+  const memberCount = family?.memberCount ?? family?.members?.length ?? 0;
+  const canStartQuestions = family?.readyForQuestions;
+  const hasStartedQuestions = family?.questionsStarted;
 
   // 오늘의 질문이 있는 경우
   return (
@@ -100,11 +158,28 @@ const Home = () => {
           <div className="family-info-card">
             <h3>우리 가족</h3>
             <p>가족 코드: <span className="family-code">{family.familyCode}</span></p>
-            <p>구성원: {family.members?.length || 0}명</p>
+            <p>구성원: {memberCount}명</p>
           </div>
         )}
 
-        {hasQuestion ? (
+        {!hasStartedQuestions ? (
+          <div className="no-question-card">
+            <h2>가족이 다 가입했나요?</h2>
+            <p>질문은 가족 구성원 2명 이상 모였을 때부터 시작돼요.</p>
+            <p className="question-info">현재 {memberCount}명이 함께하고 있어요.</p>
+            <button
+              onClick={handleStartQuestions}
+              className="btn-primary answer-btn"
+              disabled={!canStartQuestions || startLoading}
+            >
+              {startLoading ? '시작 중...' : '질문 받기 시작하기'}
+            </button>
+            {!canStartQuestions && (
+              <p className="question-info">최소 2명이 모이면 버튼이 활성화됩니다.</p>
+            )}
+            {startError && <div className="error-message">{startError}</div>}
+          </div>
+        ) : hasQuestion ? (
           <div className="question-card">
             <div className="question-header">
               <h2>오늘의 질문</h2>
@@ -167,6 +242,28 @@ const Home = () => {
                 </div>
               </div>
             )}
+
+            {/* 디버깅용 버튼 */}
+            {showDebugControls && (
+              <div style={{ marginTop: '20px', borderTop: '1px solid #e0e0e0', paddingTop: '20px' }}>
+                <small style={{ color: '#999', display: 'block', marginBottom: '10px' }}>
+                  테스트 도구 (다음 질문 넘기기/새로고침)
+                </small>
+                <button
+                  onClick={handleSkipToNext}
+                  className="btn-secondary"
+                  style={{ marginRight: '10px' }}
+                >
+                  다음 질문으로 건너뛰기
+                </button>
+                <button
+                  onClick={handleRefreshQuestion}
+                  className="btn-secondary"
+                >
+                  질문 새로고침
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="no-question-card">
@@ -174,6 +271,19 @@ const Home = () => {
             <p className="question-info">
               가족 구성원이 모두 답변을 완료하면 다음 질문이 생성됩니다.
             </p>
+
+            {/* 디버깅용 버튼 */}
+            {showDebugControls && (
+              <div style={{ marginTop: '20px' }}>
+                <button
+                  onClick={handleRefreshQuestion}
+                  className="btn-secondary"
+                  style={{ marginRight: '10px' }}
+                >
+                  질문 새로고침 (디버깅)
+                </button>
+              </div>
+            )}
           </div>
         )}
 

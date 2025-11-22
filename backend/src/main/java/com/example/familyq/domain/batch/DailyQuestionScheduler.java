@@ -2,6 +2,7 @@ package com.example.familyq.domain.batch;
 
 import com.example.familyq.domain.family.entity.Family;
 import com.example.familyq.domain.family.repository.FamilyRepository;
+import com.example.familyq.domain.question.QuestionPolicy;
 import com.example.familyq.domain.question.entity.FamilyQuestion;
 import com.example.familyq.domain.question.entity.FamilyQuestionStatus;
 import com.example.familyq.domain.question.entity.Question;
@@ -40,8 +41,18 @@ public class DailyQuestionScheduler {
         LocalDate today = DateTimeUtils.today();
         List<Family> families = familyRepository.findAll();
         for (Family family : families) {
-            familyQuestionRepository.findTopByFamilyOrderBySequenceNumberDesc(family)
-                    .ifPresent(latest -> createNextIfNecessary(family, latest, today, totalQuestionCount));
+            if (!Boolean.TRUE.equals(family.getQuestionsStarted())) {
+                continue;
+            }
+
+            Family managedFamily = familyRepository.findWithMembersById(family.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_NOT_FOUND));
+            if (managedFamily.getMembers().size() < QuestionPolicy.MIN_MEMBERS_TO_START) {
+                continue;
+            }
+
+            familyQuestionRepository.findTopByFamilyOrderBySequenceNumberDesc(managedFamily)
+                    .ifPresent(latest -> createNextIfNecessary(managedFamily, latest, today, totalQuestionCount));
         }
     }
 
@@ -69,7 +80,7 @@ public class DailyQuestionScheduler {
                 .sequenceNumber(nextSequence)
                 .assignedDate(today)
                 .status(FamilyQuestionStatus.IN_PROGRESS)
-                .requiredMemberCount(family.getMembers().size())
+                .requiredMemberCount(Math.max(QuestionPolicy.MIN_MEMBERS_TO_START, family.getMembers().size()))
                 .build();
         familyQuestionRepository.save(familyQuestion);
         log.info("Assigned question {} to family {}", nextSequence, family.getId());

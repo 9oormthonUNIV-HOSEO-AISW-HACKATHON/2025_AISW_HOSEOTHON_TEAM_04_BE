@@ -41,6 +41,10 @@ public class Family extends BaseTimeEntity {
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FamilyQuestion> familyQuestions = new ArrayList<>();
 
+    @Builder.Default
+    @Column(name = "questions_started", nullable = false)
+    private Boolean questionsStarted = false;
+
     public void updateFamilyCode(String familyCode) {
         this.familyCode = familyCode;
     }
@@ -53,5 +57,9 @@ public class Family extends BaseTimeEntity {
     public void removeMember(User user) {
         this.members.remove(user);
         user.leaveFamily();
+    }
+
+    public void startQuestions() {
+        this.questionsStarted = true;
     }
 }

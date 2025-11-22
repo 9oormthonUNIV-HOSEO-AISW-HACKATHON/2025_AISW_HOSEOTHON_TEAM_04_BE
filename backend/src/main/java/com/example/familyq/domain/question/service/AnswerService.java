@@ -1,9 +1,11 @@
 package com.example.familyq.domain.question.service;
 
 import com.example.familyq.domain.family.entity.Family;
+import com.example.familyq.domain.family.repository.FamilyRepository;
 import com.example.familyq.domain.insight.dto.InsightGenerateRequest;
 import com.example.familyq.domain.insight.dto.InsightResponse;
 import com.example.familyq.domain.insight.service.InsightService;
+import com.example.familyq.domain.question.QuestionPolicy;
 import com.example.familyq.domain.question.dto.AnswerRequest;
 import com.example.familyq.domain.question.dto.AnswerResponse;
 import com.example.familyq.domain.question.entity.Answer;
@@ -17,6 +19,7 @@ import com.example.familyq.global.exception.BusinessException;
 import com.example.familyq.global.exception.ErrorCode;
 import com.example.familyq.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,11 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AnswerService {
 
     private final AnswerRepository answerRepository;
     private final FamilyQuestionRepository familyQuestionRepository;
     private final UserRepository userRepository;
+    private final FamilyRepository familyRepository;
     private final InsightService insightService;
 
     @Transactional
@@ -55,6 +60,11 @@ public class AnswerService {
             throw new BusinessException(ErrorCode.FAMILY_QUESTION_ALREADY_COMPLETED);
         }
 
+        Family managedFamily = familyRepository.findWithMembersById(family.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_NOT_FOUND));
+        int requiredMemberCount = resolveRequiredMemberCount(managedFamily, familyQuestion);
+        familyQuestion.updateRequiredMemberCount(requiredMemberCount);
+
         Answer answer = answerRepository.findByFamilyQuestionAndUser(familyQuestion, user)
                 .map(existing -> {
                     existing.updateContent(request.getContent());
@@ -68,13 +78,13 @@ public class AnswerService {
                                 .build())
                 );
 
-        evaluateCompletion(familyQuestion);
+        evaluateCompletion(familyQuestion, requiredMemberCount);
         return AnswerResponse.of(answer, userId);
     }
 
-    private void evaluateCompletion(FamilyQuestion familyQuestion) {
+    private void evaluateCompletion(FamilyQuestion familyQuestion, int requiredMemberCount) {
         long answerCount = answerRepository.countByFamilyQuestion(familyQuestion);
-        if (familyQuestion.isCompleted() || answerCount < familyQuestion.getRequiredMemberCount()) {
+        if (familyQuestion.isCompleted() || answerCount < requiredMemberCount) {
             return;
         }
 
@@ -82,8 +92,20 @@ public class AnswerService {
 
         List<Answer> answers = answerRepository.findByFamilyQuestion(familyQuestion);
         InsightGenerateRequest request = buildInsightRequest(familyQuestion, answers);
-        InsightResponse response = insightService.generateInsight(request);
-        familyQuestion.saveInsightJson(insightService.serialize(response));
+        try {
+            InsightResponse response = insightService.generateInsight(request);
+            familyQuestion.saveInsightJson(insightService.serialize(response));
+        } catch (Exception e) {
+            // 인사이트 생성 실패는 답변 완료를 막지 않도록 무시하고 로그만 남김
+            log.warn("Failed to generate insight for familyQuestionId={}: {}", familyQuestion.getId(), e.getMessage());
+        }
+    }
+
+    private int resolveRequiredMemberCount(Family family, FamilyQuestion familyQuestion) {
+        int currentMemberCount = family.getMembers().size();
+        int storedRequiredCount = familyQuestion.getRequiredMemberCount() == null ? 0 : familyQuestion.getRequiredMemberCount();
+        int baseRequiredCount = Math.max(QuestionPolicy.MIN_MEMBERS_TO_START, storedRequiredCount);
+        return Math.max(1, Math.min(currentMemberCount, baseRequiredCount));
     }
 
     private InsightGenerateRequest buildInsightRequest(FamilyQuestion familyQuestion, List<Answer> answers) {

@@ -17,7 +17,7 @@ public class ApiErrorResponse {
 
     public static ApiErrorResponse from(ErrorCode errorCode, String path) {
         return ApiErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().toString())
                 .status(errorCode.getStatus().value())
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
@@ -27,7 +27,7 @@ public class ApiErrorResponse {
 
     public static ApiErrorResponse of(ErrorCode errorCode, String customMessage, String path) {
         return ApiErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(LocalDateTime.now().toString())
                 .status(errorCode.getStatus().value())
                 .code(errorCode.getCode())
                 .message(customMessage)

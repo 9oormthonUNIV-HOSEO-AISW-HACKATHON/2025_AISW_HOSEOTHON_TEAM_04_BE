@@ -14,7 +14,17 @@ services:
       DB_NAME: ${DB_NAME:-family_db}
       DB_USER: ${DB_USER:-family_db}
       DB_PASS: ${DB_PASS:?Set DB_PASS}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3008,http://localhost:4002,https://familyq.hibiscus.biz}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3008,https://familyq.hibiscus.biz}
+
+  frontend:
+    image: ${FRONT_IMAGE_REPO:-myosotis0504/family-frontend}:${FRONT_IMAGE_TAG:-latest}
+    container_name: familyq_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONT_APP_PORT:-3008}:3001"
+    environment:
+      # 필요한 경우 빌드 시점이 아닌 런타임에 API URL을 주입하려면 ENV 사용 (현재는 빌드 ARG 사용)
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://familyqapi.hibiscus.biz}
 
 networks:
   default:

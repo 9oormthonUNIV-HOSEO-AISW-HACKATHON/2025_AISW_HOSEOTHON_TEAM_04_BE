@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { authAPI, userAPI } from '../api';
 
 const AuthContext = createContext(null);
@@ -15,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
 
   // 사용자 정보 가져오기
   const fetchUser = async () => {
@@ -34,12 +36,21 @@ export const AuthProvider = ({ children }) => {
   // 컴포넌트 마운트 시 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
+      const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/signup');
+      const hasSessionCookie = document.cookie.includes('JSESSIONID');
+
+      // On public pages, skip probing unless a session cookie already exists (restores login on refresh)
+      if (isAuthPage && !hasSessionCookie) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       await fetchUser();
       setLoading(false);
     };
     checkAuth();
-  }, []);
+  }, [location.pathname]);
 
   // 로그인
   const login = async (loginData) => {

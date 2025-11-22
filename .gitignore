@@ -66,10 +66,12 @@ logs/
 
 # Deployment
 .backend-version
+.frontend-version
 .env
 backend/.env
-scripts/deploy.sh
+frontend/.env
+scripts/deploy-backend.sh
+scripts/deploy-frontend.sh
 scripts/*.sh
-deploy.sh
 *.pem
 *.key

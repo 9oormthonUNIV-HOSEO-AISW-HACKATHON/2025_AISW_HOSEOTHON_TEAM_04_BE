@@ -35,13 +35,13 @@ docker-compose ps
 
 ```bash
 # 실행 권한 부여
-chmod +x scripts/deploy.sh
+chmod +x scripts/deploy-backend.sh
 
 # 배포 실행
-./scripts/deploy.sh
+./scripts/deploy-backend.sh
 
 # 클린 시작 (기존 데이터 삭제)
-CLEAN_START=true ./scripts/deploy.sh
+CLEAN_START=true ./scripts/deploy-backend.sh
 ```
 
 ## 📁 프로젝트 구조

@@ -5,6 +5,7 @@ import com.example.familyq.domain.family.dto.FamilyJoinRequest;
 import com.example.familyq.domain.family.dto.FamilyResponse;
 import com.example.familyq.domain.family.entity.Family;
 import com.example.familyq.domain.family.repository.FamilyRepository;
+import com.example.familyq.domain.question.QuestionPolicy;
 import com.example.familyq.domain.user.entity.User;
 import com.example.familyq.domain.user.repository.UserRepository;
 import com.example.familyq.global.exception.BusinessException;
@@ -73,6 +74,32 @@ public class FamilyService {
         Family loadedFamily = familyRepository.findWithMembersById(family.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_NOT_FOUND));
         return FamilyResponse.from(loadedFamily);
+    }
+
+    @Transactional
+    public FamilyResponse startQuestions(Long userId) {
+        User user = getUser(userId);
+        Family family = user.getFamily();
+        if (family == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_IN_FAMILY);
+        }
+
+        Family managedFamily = familyRepository.findWithMembersById(family.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.FAMILY_NOT_FOUND));
+
+        int memberCount = managedFamily.getMembers().size();
+        if (memberCount < QuestionPolicy.MIN_MEMBERS_TO_START) {
+            throw new BusinessException(
+                    ErrorCode.FAMILY_NOT_READY_FOR_QUESTIONS,
+                    "가족 구성원이 최소 " + QuestionPolicy.MIN_MEMBERS_TO_START + "명 이상일 때만 질문을 시작할 수 있습니다."
+            );
+        }
+
+        if (!Boolean.TRUE.equals(managedFamily.getQuestionsStarted())) {
+            managedFamily.startQuestions();
+        }
+
+        return FamilyResponse.from(managedFamily);
     }
 
     private User getUser(Long userId) {

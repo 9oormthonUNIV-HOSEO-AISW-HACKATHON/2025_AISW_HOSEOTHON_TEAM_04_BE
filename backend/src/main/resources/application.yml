@@ -13,6 +13,11 @@ spring:
         show_sql: false
         use_sql_comments: true
 
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
+
 server:
   port: 3000
   servlet:
@@ -21,7 +26,8 @@ server:
       timeout: 30m  # 세션 타임아웃 30분
       cookie:
         http-only: true
-        secure: false  # HTTPS 사용 시 true로 변경
+        secure: ${SESSION_COOKIE_SECURE:true}  # HTTPS에서 세션 쿠키 전송
+        same-site: ${SESSION_COOKIE_SAMESITE:none}  # 크로스사이트 요청에도 쿠키 전달
 
 logging:
   level:
@@ -32,7 +38,7 @@ logging:
 
 app:
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3008,http://localhost:4002,https://familyq.hibiscus.biz}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3008,https://familyq.hibiscus.biz}
 
 # Swagger Configuration
 springdoc:

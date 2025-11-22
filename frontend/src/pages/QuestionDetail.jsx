@@ -11,6 +11,7 @@ const QuestionDetail = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     loadQuestionDetail();
@@ -23,6 +24,8 @@ const QuestionDetail = () => {
     try {
       const data = await questionAPI.getQuestionDetail(id);
       setQuestion(data);
+      setIsEditing(false);
+      setAnswerText('');
     } catch (err) {
       setError('질문을 불러오는데 실패했습니다.');
     } finally {
@@ -45,6 +48,7 @@ const QuestionDetail = () => {
       await questionAPI.submitAnswer(id, { content: answerText });
       await loadQuestionDetail(); // 답변 후 데이터 새로고침
       setAnswerText('');
+      setIsEditing(false);
     } catch (err) {
       setError('답변 제출에 실패했습니다.');
     } finally {
@@ -55,6 +59,19 @@ const QuestionDetail = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
+  const handleStartEdit = () => {
+    if (!question?.myAnswer) return;
+    setAnswerText(question.myAnswer.content);
+    setIsEditing(true);
+    setError(null);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setAnswerText('');
+    setError(null);
   };
 
   if (loading) {
@@ -75,6 +92,9 @@ const QuestionDetail = () => {
 
   const isCompleted = Boolean(question.completed);
   const questionTitle = question.questionText;
+  const userAnswer = question.myAnswer;
+  const showAnswerForm = !userAnswer || isEditing;
+  const showWaitingMessage = !isCompleted && Boolean(userAnswer);
 
   return (
     <div className="container">
@@ -96,10 +116,32 @@ const QuestionDetail = () => {
         <div className="question-detail-content">
           <h1 className="question-title">{questionTitle}</h1>
 
-          {/* 답변 제출 섹션 */}
-          {!question.myAnswer && (
-            <div className="answer-submit-section">
-              <h3>나의 답변</h3>
+          <div className="answer-submit-section">
+            <h3>나의 답변</h3>
+
+            {userAnswer && !isEditing && (
+              <div className="my-answer-section">
+                <div className="answer-card">
+                  <p className="answer-content">{userAnswer.content}</p>
+                  <div className="answer-footer">
+                    <span className="answer-time">
+                      {formatDate(userAnswer.createdAt)}
+                    </span>
+                    {!isCompleted && (
+                      <button
+                        type="button"
+                        className="btn-secondary edit-button"
+                        onClick={handleStartEdit}
+                      >
+                        답변 수정
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {showAnswerForm && (
               <form onSubmit={handleSubmitAnswer}>
                 <textarea
                   value={answerText}
@@ -110,29 +152,28 @@ const QuestionDetail = () => {
                   disabled={submitting}
                 />
                 {error && <div className="error-message">{error}</div>}
-                <button
-                  type="submit"
-                  className="btn-primary submit-button"
-                  disabled={submitting}
-                >
-                  {submitting ? '제출 중...' : '답변 제출'}
-                </button>
+                <div className="answer-actions">
+                  {userAnswer && (
+                    <button
+                      type="button"
+                      className="btn-secondary cancel-button"
+                      onClick={handleCancelEdit}
+                      disabled={submitting}
+                    >
+                      취소
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    className="btn-primary submit-button"
+                    disabled={submitting}
+                  >
+                    {submitting ? '저장 중...' : userAnswer ? '답변 수정' : '답변 제출'}
+                  </button>
+                </div>
               </form>
-            </div>
-          )}
-
-          {/* 내 답변 표시 */}
-          {question.myAnswer && (
-            <div className="my-answer-section">
-              <h3>나의 답변</h3>
-              <div className="answer-card">
-                <p className="answer-content">{question.myAnswer.content}</p>
-                <span className="answer-time">
-                  {formatDate(question.myAnswer.createdAt)}
-                </span>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* 다른 가족들의 답변 (완료 상태일 때만) */}
           {isCompleted && question.answers && question.answers.length > 0 && (
@@ -188,7 +229,7 @@ const QuestionDetail = () => {
                   <div className="insight-item">
                     <h4>대화 제안</h4>
                     <ul>
-                      {question.insight.conversation_suggestions.map((suggestion, index) => (
+                      {question.insight.conversationSuggestions.map((suggestion, index) => (
                         <li key={index}>{suggestion}</li>
                       ))}
                     </ul>
@@ -199,7 +240,7 @@ const QuestionDetail = () => {
           )}
 
           {/* 답변 대기 중 메시지 */}
-          {question.status === 'IN_PROGRESS' && question.myAnswer && (
+          {showWaitingMessage && (
             <div className="waiting-message">
               <p>다른 가족 구성원들의 답변을 기다리는 중입니다.</p>
               <p className="hint">모든 가족이 답변을 완료하면 서로의 답변과 AI 인사이트를 확인할 수 있습니다.</p>

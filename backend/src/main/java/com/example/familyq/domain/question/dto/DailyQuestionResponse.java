@@ -21,8 +21,23 @@ public class DailyQuestionResponse {
     private final AnswerResponse myAnswer;
     private final InsightResponse insight;
 
+    public static DailyQuestionResponse empty() {
+        return DailyQuestionResponse.builder()
+                .familyQuestionId(null)
+                .sequenceNumber(0)
+                .questionText("아직 오늘의 질문이 없습니다")
+                .assignedDate(null)
+                .requiredMemberCount(0)
+                .answeredCount(0)
+                .completed(false)
+                .myAnswer(null)
+                .insight(null)
+                .build();
+    }
+
     public static DailyQuestionResponse of(FamilyQuestion familyQuestion,
                                            int answeredCount,
+                                           int requiredMemberCount,
                                            AnswerResponse myAnswer,
                                            InsightResponse insight) {
         return DailyQuestionResponse.builder()
@@ -30,7 +45,7 @@ public class DailyQuestionResponse {
                 .sequenceNumber(familyQuestion.getSequenceNumber())
                 .questionText(familyQuestion.getQuestion().getText())
                 .assignedDate(familyQuestion.getAssignedDate())
-                .requiredMemberCount(familyQuestion.getRequiredMemberCount())
+                .requiredMemberCount(requiredMemberCount)
                 .answeredCount(answeredCount)
                 .completed(familyQuestion.isCompleted())
                 .myAnswer(myAnswer)

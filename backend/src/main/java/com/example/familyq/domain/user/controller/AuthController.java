@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,11 +65,20 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+        // 세션 무효화
         HttpSession session = request.getSession(false);
         if (session != null) {
             session.invalidate();
         }
+
+        // JSESSIONID 쿠키 명시적 삭제
+        Cookie sessionCookie = new Cookie("JSESSIONID", null);
+        sessionCookie.setPath("/");  // 쿠키가 설정된 경로와 동일하게 설정
+        sessionCookie.setMaxAge(0);  // 즉시 만료
+        sessionCookie.setHttpOnly(true);  // 보안을 위해 HttpOnly 플래그 설정
+        response.addCookie(sessionCookie);
+
         return ResponseEntity.noContent().build();
     }
 }

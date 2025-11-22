@@ -19,6 +19,7 @@ public enum ErrorCode {
     FAMILY_CODE_INVALID(HttpStatus.BAD_REQUEST, "FAMILY_400_01", "유효하지 않은 가족 코드입니다."),
     USER_ALREADY_HAS_FAMILY(HttpStatus.CONFLICT, "FAMILY_409_02", "이미 가족에 속해 있습니다."),
     USER_NOT_IN_FAMILY(HttpStatus.BAD_REQUEST, "FAMILY_400_02", "가족에 속해 있지 않습니다."),
+    FAMILY_NOT_READY_FOR_QUESTIONS(HttpStatus.BAD_REQUEST, "FAMILY_400_03", "가족이 아직 질문을 시작할 준비가 되지 않았습니다."),
 
     QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTION_404", "질문 정보를 찾을 수 없습니다."),
     QUESTION_IN_USE(HttpStatus.CONFLICT, "QUESTION_409_01", "이미 사용 중인 질문은 삭제할 수 없습니다."),

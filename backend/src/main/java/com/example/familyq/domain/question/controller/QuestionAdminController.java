@@ -1,8 +1,10 @@
 package com.example.familyq.domain.question.controller;
 
+import com.example.familyq.domain.question.dto.DailyQuestionResponse;
 import com.example.familyq.domain.question.dto.QuestionAdminResponse;
 import com.example.familyq.domain.question.dto.QuestionCreateRequest;
 import com.example.familyq.domain.question.service.QuestionAdminService;
+import com.example.familyq.domain.question.service.QuestionService;
 import com.example.familyq.domain.user.dto.LoginUserInfo;
 import com.example.familyq.global.exception.BusinessException;
 import com.example.familyq.global.exception.ErrorCode;
@@ -33,6 +35,7 @@ import java.util.List;
 public class QuestionAdminController {
 
     private final QuestionAdminService questionAdminService;
+    private final QuestionService questionService;
 
     @Operation(summary = "질문 목록 조회", description = "시스템에 등록된 모든 질문을 조회합니다. (관리자 전용)")
     @SecurityRequirement(name = "SESSION")
@@ -82,6 +85,40 @@ public class QuestionAdminController {
         validateAdmin(loginUser);
         questionAdminService.deleteQuestion(questionId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "질문 새로고침 (디버깅용)", description = "사용자의 현재 질문을 새로고침합니다. 관리자가 질문을 추가한 후 즉시 반영하기 위해 사용합니다.")
+    @SecurityRequirement(name = "SESSION")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "새로고침 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자만 가능)"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/refresh/{userId}")
+    public ResponseEntity<DailyQuestionResponse> refreshQuestion(
+            @Parameter(hidden = true) @LoginUser LoginUserInfo loginUser,
+            @Parameter(description = "사용자 ID") @PathVariable Long userId) {
+        validateAdmin(loginUser);
+        return ResponseEntity.ok(questionService.refreshQuestion(userId));
+    }
+
+    @Operation(summary = "다음 질문으로 건너뛰기 (디버깅용)", description = "현재 질문을 완료 처리하고 다음 질문으로 이동합니다. 테스트 및 디버깅 목적으로 사용합니다.")
+    @SecurityRequirement(name = "SESSION")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "다음 질문으로 이동 성공"),
+            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
+            @ApiResponse(responseCode = "403", description = "권한 없음 (관리자만 가능)"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/skip-to-next/{userId}")
+    public ResponseEntity<DailyQuestionResponse> skipToNextQuestion(
+            @Parameter(hidden = true) @LoginUser LoginUserInfo loginUser,
+            @Parameter(description = "사용자 ID") @PathVariable Long userId) {
+        validateAdmin(loginUser);
+        return ResponseEntity.ok(questionService.skipToNextQuestion(userId));
     }
 
     private void validateAdmin(LoginUserInfo loginUser) {

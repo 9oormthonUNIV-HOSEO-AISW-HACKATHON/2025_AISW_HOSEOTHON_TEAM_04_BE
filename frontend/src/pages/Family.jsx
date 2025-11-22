@@ -11,6 +11,7 @@ const Family = () => {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
+  const [startLoading, setStartLoading] = useState(false);
 
   useEffect(() => {
     if (user?.familyId) {
@@ -27,6 +28,21 @@ const Family = () => {
     }
   };
 
+  const handleStartQuestions = async () => {
+    setStartLoading(true);
+    setError('');
+    setSuccessMessage('');
+    try {
+      const response = await familyAPI.startQuestions();
+      setFamily(response);
+      setSuccessMessage('질문을 시작했어요! 홈에서 오늘의 질문을 확인하세요.');
+    } catch (err) {
+      setError(err.response?.data?.message || '질문 시작에 실패했습니다.');
+    } finally {
+      setStartLoading(false);
+    }
+  };
+
   const handleCreateFamily = async () => {
     setLoading(true);
     setError('');
@@ -37,6 +53,7 @@ const Family = () => {
       setFamily(response);
       setSuccessMessage(`가족이 생성되었습니다! 가족 코드: ${response.familyCode}`);
       await fetchUser(); // 사용자 정보 업데이트
+      await loadFamilyData(); // 최신 가족 정보 반영
     } catch (err) {
       setError(err.response?.data?.message || '가족 생성에 실패했습니다.');
     } finally {
@@ -61,6 +78,7 @@ const Family = () => {
       setFamilyCode('');
       setSuccessMessage('가족에 성공적으로 참여했습니다!');
       await fetchUser(); // 사용자 정보 업데이트
+      await loadFamilyData(); // 최신 가족 정보 반영
     } catch (err) {
       setError(err.response?.data?.message || '가족 참여에 실패했습니다.');
     } finally {
@@ -181,7 +199,7 @@ const Family = () => {
             <h2>가족 통계</h2>
             <div className="stats-grid">
               <div className="stat-item">
-                <div className="stat-number">{family?.members?.length || 0}</div>
+                <div className="stat-number">{family?.memberCount ?? family?.members?.length ?? 0}</div>
                 <div className="stat-label">가족 구성원</div>
               </div>
               <div className="stat-item">
@@ -193,6 +211,24 @@ const Family = () => {
                 <div className="stat-label">총 답변 수</div>
               </div>
             </div>
+          </div>
+
+          <div className="family-question-start-card">
+            <h2>가족이 다 가입했나요?</h2>
+            <p>질문은 최소 2명이 모이면 시작할 수 있어요.</p>
+            <p className="hint-text">
+              현재 {family?.memberCount ?? family?.members?.length ?? 0}명이 함께하고 있습니다.
+            </p>
+            <button
+              onClick={handleStartQuestions}
+              className="btn-primary"
+              disabled={family?.questionsStarted || !family?.readyForQuestions || startLoading}
+            >
+              {family?.questionsStarted ? '이미 질문 진행 중' : startLoading ? '시작 중...' : '질문 받기 시작하기'}
+            </button>
+            {!family?.readyForQuestions && !family?.questionsStarted && (
+              <p className="hint-text">가족 구성원을 한 명 더 초대하면 질문을 시작할 수 있어요.</p>
+            )}
           </div>
         </div>
 

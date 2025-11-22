@@ -12,8 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InsightResponse {
-
-    private List<String> commonThemes;
-    private List<String> generationDifferences;
-    private List<String> conversationSuggestions;
+    private String commonPoints;
+    private String differences;
+    private List<String> suggestedDialogue;
 }
+

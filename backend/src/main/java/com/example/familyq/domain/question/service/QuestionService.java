@@ -3,7 +3,8 @@ package com.example.familyq.domain.question.service;
 import com.example.familyq.domain.family.entity.Family;
 import com.example.familyq.domain.family.repository.FamilyRepository;
 import com.example.familyq.domain.insight.dto.InsightResponse;
-import com.example.familyq.domain.insight.service.InsightService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.familyq.domain.question.QuestionPolicy;
 import com.example.familyq.domain.question.dto.AnswerResponse;
 import com.example.familyq.domain.question.dto.DailyQuestionResponse;
@@ -22,6 +23,7 @@ import com.example.familyq.global.exception.BusinessException;
 import com.example.familyq.global.exception.ErrorCode;
 import com.example.familyq.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuestionService {
@@ -40,7 +43,7 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final FamilyQuestionRepository familyQuestionRepository;
     private final AnswerRepository answerRepository;
-    private final InsightService insightService;
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public DailyQuestionResponse getTodayQuestion(Long userId) {
@@ -176,7 +179,13 @@ public class QuestionService {
         if (familyQuestion.getInsightJson() == null) {
             return null;
         }
-        return insightService.deserialize(familyQuestion.getInsightJson());
+        try {
+            return objectMapper.readValue(familyQuestion.getInsightJson(), InsightResponse.class);
+        } catch (JsonProcessingException e) {
+            // 파싱 실패 시 null 반환 (에러 로그는 선택사항)
+            log.warn("Failed to parse insight JSON for familyQuestionId={}: {}", familyQuestion.getId(), e.getMessage());
+            return null;
+        }
     }
 
     @Transactional

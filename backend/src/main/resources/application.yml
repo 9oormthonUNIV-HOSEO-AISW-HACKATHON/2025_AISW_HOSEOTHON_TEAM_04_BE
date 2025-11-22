@@ -36,6 +36,12 @@ logging:
     org.hibernate.SQL: WARN
     org.hibernate.type: WARN
 
+# AI API Configuration
+ai:
+  api:
+    url: ${AI_API_URL:https://factchat-cloud.mindlogic.ai/v1/api/openai/chat/completions}
+    key: ${AI_API_KEY:2mRXEegML87s2yTf07FBaarrhwVfWJLS}
+
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3008,https://familyq.hibiscus.biz}

@@ -29,7 +29,7 @@ public class AiService {
     private final AnswerRepository answerRepository;
 
     private static final String SYSTEM_PROMPT =
-            "You are a professional family counselor. When the user provides responses from multiple family members (e.g., two parents and children) about a single topic, your task is to analyze their perspectives, identify emotional states and conflicts, and offer constructive communication guidance. Always return your answer strictly in the following JSON format: { \"content\": \"...analysis and counseling guidance...\" } Do not include any additional fields or text outside this JSON structure.";
+        "You are a professional family counselor. When the user provides responses from multiple family members (e.g., parents and children) about a single topic, your task is to analyze their perspectives, emotional context, and developmental stage. For each family member, calculate age based on the provided birth year, and use this information to guide your interpretation (e.g., cognitive development, emotional regulation ability, generational values, role expectations, etc.).\n\nAfter analyzing all responses, provide:\n\n- Common viewpoints among family members\n- Key differences between parents and children (considering emotional state, logic style, generational perspective, and age development stage)\n- Two short suggested dialogue sentences that could help bridge understanding and improve communication\n\nAlways return the result strictly in the following JSON format:\n\n{\n  \"common_points\": \"...공통점 분석...\",\n  \"differences\": \"...부모와 자식의 관점 차이 분석 (나이 고려 포함)...\",\n  \"suggested_dialogue\": [\n    \"대화 제안 문장 1\",\n    \"대화 제안 문장 2\"\n  ]\n}\n\nDo not include any additional fields or text outside this JSON structure.";
 
     /**
      * 가족 질문 ID로 상담 요청 (모든 답변이 완료된 경우만)
@@ -94,9 +94,10 @@ public class AiService {
         for (Answer answer : answers) {
             RoleType roleType = answer.getUser().getRoleType();
             String roleName = getRoleName(roleType, childIndex);
+            Integer birthYear = answer.getUser().getBirthYear();
             String answerContent = escapeJson(answer.getContent());
             
-            roleAnswers.add("\"" + roleName + "\": \"" + answerContent + "\"");
+            roleAnswers.add("\"" + roleName + "( birthYear : " + birthYear + ")\": \"" + answerContent + "\"");
             
             // 자녀인 경우 인덱스 증가
             if (roleType == RoleType.CHILD) {

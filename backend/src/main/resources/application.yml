@@ -87,7 +87,7 @@ spring:
     url: jdbc:mariadb://${DB_HOST:192.168.0.51}:${DB_PORT:3306}/${DB_NAME:family_db}
     driver-class-name: org.mariadb.jdbc.Driver
     username: ${DB_USER:family_db}
-    password: ${DB_PASS:pubvox-rarGe1-jikhec}
+    password: ${DB_PASS}
 
   jpa:
     hibernate:

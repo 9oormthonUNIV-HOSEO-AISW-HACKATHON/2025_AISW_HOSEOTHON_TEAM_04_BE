@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    image: ${IMAGE_REPO:-myosotis0504/family_backend}:${IMAGE_TAG:-latest}
+    container_name: familyq_backend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3008}:3000"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      DB_HOST: ${DB_HOST:?Set DB_HOST to MariaDB host/container}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-family_db}
+      DB_USER: ${DB_USER:-family_db}
+      DB_PASS: ${DB_PASS:?Set DB_PASS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3008,http://localhost:4002,https://familyq.hibiscus.biz}
+
+networks:
+  default:
+    name: familyq
+    driver: bridge

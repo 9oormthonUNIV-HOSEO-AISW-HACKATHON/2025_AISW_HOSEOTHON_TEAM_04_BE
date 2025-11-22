@@ -1,0 +1,75 @@
+# Gradle (root/backend)
+.gradle/
+backend/.gradle/
+backend/build/
+backend/out/
+!backend/gradle/wrapper/gradle-wrapper.jar
+!backend/src/main/**/build/
+!backend/src/test/**/build/
+
+# IntelliJ IDEA
+.idea/
+backend/.idea/
+*.iws
+*.iml
+*.ipr
+backend/out/
+!backend/src/main/**/out/
+!backend/src/test/**/out/
+
+# Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Application
+application-local.yml
+application-dev.yml
+application-prod.yml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+*~
+
+# Deployment
+.backend-version
+.env
+backend/.env
+scripts/deploy.sh
+scripts/*.sh
+deploy.sh
+*.pem
+*.key

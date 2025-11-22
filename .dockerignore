@@ -1,0 +1,81 @@
+# ============================================
+# FamilyQ Backend - Docker Build Ignore
+# ============================================
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+out/
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Test
+test-results/
+coverage/
+.pytest_cache/
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Deployment Scripts
+scripts/
+docker-compose.yml
+.env
+!.env.example
+
+# Temporary Files
+*.tmp
+*.swp
+*.swo
+*~
+*.bak
+*.cache
+
+# Application Config (로컬 설정 제외)
+application-local.yml
+application-dev.yml
+
+# Backend-specific
+.backend-version
+claudedocs/
+TEST_REPORT.md
+POSTMAN_TEST_GUIDE.md
+FamilyQ_Postman_Collection.json
+Dockerfile
+.dockerignore

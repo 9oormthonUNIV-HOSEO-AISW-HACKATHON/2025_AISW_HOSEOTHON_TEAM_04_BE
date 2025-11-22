@@ -1,0 +1,69 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.5'
+    id 'io.spring.dependency-management' version '1.1.6'
+}
+
+springBoot {
+    mainClass = 'com.example.familyq.FamilyQApplication'
+}
+
+group = 'com.goorm'
+version = '0.0.1-SNAPSHOT'
+description = '2025_AISW_HOSEOTHON_TEAM_04_BE'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Database
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client' // MariaDB 드라이버 추가
+    testRuntimeOnly 'com.h2database:h2' // 테스트용 in-memory DB
+
+    // JWT (세션 기반이 아닌 토큰 기반으로 변경 시 필요)
+    // implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    // runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    // runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+    // Swagger/OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // ModelMapper
+    implementation 'org.modelmapper:modelmapper:3.2.0'
+
+    // Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // Development Tools
+developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

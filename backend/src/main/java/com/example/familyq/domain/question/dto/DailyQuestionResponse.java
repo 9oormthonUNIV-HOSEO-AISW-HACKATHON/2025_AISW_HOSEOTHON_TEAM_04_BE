@@ -20,6 +20,7 @@ public class DailyQuestionResponse {
     private final boolean completed;
     private final AnswerResponse myAnswer;
     private final InsightResponse insight;
+    private final String insightJson;
 
     public static DailyQuestionResponse empty() {
         return DailyQuestionResponse.builder()
@@ -32,6 +33,7 @@ public class DailyQuestionResponse {
                 .completed(false)
                 .myAnswer(null)
                 .insight(null)
+                .insightJson(null)
                 .build();
     }
 
@@ -39,7 +41,8 @@ public class DailyQuestionResponse {
                                            int answeredCount,
                                            int requiredMemberCount,
                                            AnswerResponse myAnswer,
-                                           InsightResponse insight) {
+                                           InsightResponse insight,
+                                           String insightJson) {
         return DailyQuestionResponse.builder()
                 .familyQuestionId(familyQuestion.getId())
                 .sequenceNumber(familyQuestion.getSequenceNumber())
@@ -50,6 +53,7 @@ public class DailyQuestionResponse {
                 .completed(familyQuestion.isCompleted())
                 .myAnswer(myAnswer)
                 .insight(insight)
+                .insightJson(insightJson)
                 .build();
     }
 }

@@ -33,6 +33,12 @@ const Home = () => {
         // 오늘의 질문 가져오기
         if (familyData.questionsStarted) {
           const questionData = await questionAPI.getTodayQuestion();
+          console.log('[Insight Debug] today question fetched', {
+            completed: questionData?.completed,
+            answeredCount: questionData?.answeredCount,
+            requiredMemberCount: questionData?.requiredMemberCount,
+            insight: questionData?.insight,
+          });
           setTodayQuestion(questionData);
         } else {
           setTodayQuestion(null);

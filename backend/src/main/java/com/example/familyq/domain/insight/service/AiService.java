@@ -1,7 +1,7 @@
 package com.example.familyq.domain.insight.service;
 
-import com.example.familyq.domain.ai.dto.CounselingRequest;
-import com.example.familyq.domain.ai.dto.CounselingResponse;
+import com.example.familyq.domain.insight.dto.CounselingRequest;
+import com.example.familyq.domain.insight.dto.CounselingResponse;
 import com.example.familyq.domain.insight.client.FamilyCounselorClient;
 import com.example.familyq.domain.question.entity.Answer;
 import com.example.familyq.domain.question.entity.FamilyQuestion;
@@ -157,6 +157,11 @@ public class AiService {
                 .build();
 
         CounselingResponse response = familyCounselorClient.requestCounseling(request);
+        if (response == null) {
+            log.warn("AI 응답 객체가 null");
+            throw new BusinessException(ErrorCode.AI_REQUEST_FAILED, "AI 응답이 비어있습니다.");
+        }
+
         String content = response.getContent();
 
         if (content == null || content.isEmpty()) {
@@ -167,4 +172,3 @@ public class AiService {
         return content;
     }
 }
-

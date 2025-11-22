@@ -22,6 +22,7 @@ public class QuestionDetailResponse {
     private final AnswerResponse myAnswer;
     private final List<AnswerResponse> answers;
     private final InsightResponse insight;
+    private final String insightJson;
 
     public static QuestionDetailResponse of(FamilyQuestion familyQuestion,
                                             AnswerResponse myAnswer,
@@ -37,6 +38,7 @@ public class QuestionDetailResponse {
                 .myAnswer(myAnswer)
                 .answers(answers)
                 .insight(insight)
+                .insightJson(familyQuestion.getInsightJson())
                 .build();
     }
 }

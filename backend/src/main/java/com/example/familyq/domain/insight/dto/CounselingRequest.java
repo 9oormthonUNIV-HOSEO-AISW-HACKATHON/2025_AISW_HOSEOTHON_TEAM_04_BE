@@ -1,4 +1,4 @@
-package com.example.familyq.domain.ai.dto;
+package com.example.familyq.domain.insight.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -17,4 +17,3 @@ public class CounselingRequest {
         private String content;
     }
 }
-

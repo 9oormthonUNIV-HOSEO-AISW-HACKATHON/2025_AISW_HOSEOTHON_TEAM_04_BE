@@ -1,6 +1,6 @@
 package com.example.familyq.domain.insight.controller;
 
-import com.example.familyq.domain.ai.service.AiService;
+import com.example.familyq.domain.insight.service.AiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,4 +29,3 @@ public class AiController {
     public record CounselingResponse(String content) {
     }
 }
-

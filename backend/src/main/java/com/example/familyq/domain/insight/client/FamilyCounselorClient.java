@@ -1,10 +1,9 @@
 package com.example.familyq.domain.insight.client;
 
-import com.example.familyq.domain.ai.dto.CounselingRequest;
-import com.example.familyq.domain.ai.dto.CounselingResponse;
+import com.example.familyq.domain.insight.dto.CounselingRequest;
+import com.example.familyq.domain.insight.dto.CounselingResponse;
 import com.example.familyq.global.exception.BusinessException;
 import com.example.familyq.global.exception.ErrorCode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -17,17 +16,14 @@ import org.springframework.web.client.RestTemplate;
 public class FamilyCounselorClient {
 
     private final RestTemplate restTemplate;
-    private final ObjectMapper objectMapper;
     private final String apiUrl;
     private final String apiKey;
 
     public FamilyCounselorClient(
             RestTemplate restTemplate,
-            ObjectMapper objectMapper,
             @Value("${ai.api.url}") String apiUrl,
             @Value("${ai.api.key}") String apiKey) {
         this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
         this.apiUrl = apiUrl;
         this.apiKey = apiKey;
     }
@@ -63,4 +59,3 @@ public class FamilyCounselorClient {
         }
     }
 }
-

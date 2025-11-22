@@ -72,7 +72,8 @@ public class QuestionService {
                 (int) answeredCount,
                 requiredMemberCount,
                 myAnswer,
-                insight
+                insight,
+                familyQuestion.getInsightJson()
         );
     }
 
@@ -233,7 +234,14 @@ public class QuestionService {
                 .map(answer -> AnswerResponse.of(answer, userId))
                 .orElse(null);
 
-        return DailyQuestionResponse.of(newQuestion, (int) answeredCount, requiredMemberCount, myAnswer, insight);
+        return DailyQuestionResponse.of(
+                newQuestion,
+                (int) answeredCount,
+                requiredMemberCount,
+                myAnswer,
+                insight,
+                newQuestion.getInsightJson()
+        );
     }
 
     @Transactional
@@ -285,7 +293,14 @@ public class QuestionService {
                 .map(answer -> AnswerResponse.of(answer, userId))
                 .orElse(null);
 
-        return DailyQuestionResponse.of(newQuestion, (int) answeredCount, requiredMemberCount, myAnswer, insight);
+        return DailyQuestionResponse.of(
+                newQuestion,
+                (int) answeredCount,
+                requiredMemberCount,
+                myAnswer,
+                insight,
+                newQuestion.getInsightJson()
+        );
     }
 
     private void validateFamilyReadyForQuestions(Family family) {

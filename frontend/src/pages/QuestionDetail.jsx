@@ -3,6 +3,61 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { questionAPI } from '../api';
 import './QuestionDetail.css';
 
+// 백엔드에서 내려오는 인사이트 JSON(raw string)과 객체를 모두 지원
+const normalizeInsight = (insight, insightJson) => {
+  let parsedInsight = insight;
+
+  // insightJson이 있으면 우선 파싱해서 사용
+  if (!parsedInsight && insightJson) {
+    try {
+      parsedInsight = JSON.parse(insightJson);
+      console.log('[Insight Debug] parsed raw insightJson successfully');
+    } catch (e) {
+      console.warn('[Insight Debug] failed to parse insightJson', e);
+    }
+  }
+
+  if (!parsedInsight) return null;
+
+  const toList = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+      return value.filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value
+        .split(/\r?\n/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+    return [String(value)];
+  };
+
+  const commonThemes = toList(
+    insight.commonThemes ??
+    insight.common_themes ??
+    insight.commonPoints ??
+    insight.common_points
+  );
+  const generationDifferences = toList(
+    insight.generationDifferences ??
+    insight.generation_differences ??
+    insight.differences
+  );
+  const conversationSuggestions = toList(
+    insight.conversationSuggestions ??
+    insight.conversation_suggestions ??
+    insight.suggestedDialogue ??
+    insight.suggested_dialogue
+  );
+
+  if (!commonThemes.length && !generationDifferences.length && !conversationSuggestions.length) {
+    return null;
+  }
+
+  return { commonThemes, generationDifferences, conversationSuggestions };
+};
+
 const QuestionDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -23,6 +78,13 @@ const QuestionDetail = () => {
 
     try {
       const data = await questionAPI.getQuestionDetail(id);
+      console.log('[Insight Debug] fetched question detail', {
+        familyQuestionId: id,
+        completed: data?.completed,
+        answersCount: data?.answers?.length,
+        insight: data?.insight,
+        insightJson: data?.insightJson,
+      });
       setQuestion(data);
       setIsEditing(false);
       setAnswerText('');
@@ -61,6 +123,18 @@ const QuestionDetail = () => {
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
 
+  useEffect(() => {
+    if (!question) return;
+    const normalized = normalizeInsight(question.insight, question.insightJson);
+    console.log('[Insight Debug] normalized insight', {
+      familyQuestionId: question.familyQuestionId,
+      completed: question.completed,
+      rawInsight: question.insight,
+      rawInsightJson: question.insightJson,
+      normalizedInsight: normalized,
+    });
+  }, [question]);
+
   const handleStartEdit = () => {
     if (!question?.myAnswer) return;
     setAnswerText(question.myAnswer.content);
@@ -95,6 +169,7 @@ const QuestionDetail = () => {
   const userAnswer = question.myAnswer;
   const showAnswerForm = !userAnswer || isEditing;
   const showWaitingMessage = !isCompleted && Boolean(userAnswer);
+  const normalizedInsight = normalizeInsight(question.insight, question.insightJson);
 
   return (
     <div className="container">
@@ -199,37 +274,37 @@ const QuestionDetail = () => {
           )}
 
           {/* AI 인사이트 (있을 경우) */}
-          {question.insight && (
+          {normalizedInsight && (
             <div className="insight-section">
               <h3>💡 AI 인사이트</h3>
               <div className="insight-card">
-                {question.insight.commonThemes && (
+                {normalizedInsight.commonThemes.length > 0 && (
                   <div className="insight-item">
                     <h4>공통 주제</h4>
                     <ul>
-                      {question.insight.commonThemes.map((theme, index) => (
+                      {normalizedInsight.commonThemes.map((theme, index) => (
                         <li key={index}>{theme}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {question.insight.generationDifferences && (
+                {normalizedInsight.generationDifferences.length > 0 && (
                   <div className="insight-item">
                     <h4>세대별 차이</h4>
                     <ul>
-                      {question.insight.generationDifferences.map((diff, index) => (
+                      {normalizedInsight.generationDifferences.map((diff, index) => (
                         <li key={index}>{diff}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {question.insight.conversationSuggestions && (
+                {normalizedInsight.conversationSuggestions.length > 0 && (
                   <div className="insight-item">
                     <h4>대화 제안</h4>
                     <ul>
-                      {question.insight.conversationSuggestions.map((suggestion, index) => (
+                      {normalizedInsight.conversationSuggestions.map((suggestion, index) => (
                         <li key={index}>{suggestion}</li>
                       ))}
                     </ul>

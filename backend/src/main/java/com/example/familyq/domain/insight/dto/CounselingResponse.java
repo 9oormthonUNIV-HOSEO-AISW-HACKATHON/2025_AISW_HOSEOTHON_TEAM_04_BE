@@ -1,10 +1,14 @@
-package com.example.familyq.domain.ai.dto;
+package com.example.familyq.domain.insight.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Getter;
 import java.util.List;
 
 @Getter
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CounselingResponse {
     private String id;
     private String object;
@@ -14,6 +18,8 @@ public class CounselingResponse {
     private Usage usage;
 
     @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Choice {
         private Integer index;
         private Message message;
@@ -21,12 +27,16 @@ public class CounselingResponse {
     }
 
     @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Message {
         private String role;
         private String content;
     }
 
     @Getter
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Usage {
         private Integer promptTokens;
         private Integer completionTokens;
@@ -43,4 +53,3 @@ public class CounselingResponse {
         return null;
     }
 }
-

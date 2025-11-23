@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { questionAPI } from '../api';
-import './QuestionDetail.css';
+import styles from './QuestionDetail.module.css';
 
-// 백엔드에서 내려오는 인사이트 JSON(raw string)과 객체를 모두 지원
 const normalizeInsight = (insight, insightJson) => {
   let parsedInsight = insight;
 
-  // insightJson이 있으면 우선 파싱해서 사용
   if (!parsedInsight && insightJson) {
     try {
       parsedInsight = JSON.parse(insightJson);
-      console.log('[Insight Debug] parsed raw insightJson successfully');
     } catch (e) {
-      console.warn('[Insight Debug] failed to parse insightJson', e);
+      return null;
     }
   }
 
@@ -21,9 +18,7 @@ const normalizeInsight = (insight, insightJson) => {
 
   const toList = (value) => {
     if (!value) return [];
-    if (Array.isArray(value)) {
-      return value.filter(Boolean);
-    }
+    if (Array.isArray(value)) return value.filter(Boolean);
     if (typeof value === 'string') {
       return value
         .split(/\r?\n/)
@@ -34,21 +29,21 @@ const normalizeInsight = (insight, insightJson) => {
   };
 
   const commonThemes = toList(
-    insight.commonThemes ??
-    insight.common_themes ??
-    insight.commonPoints ??
-    insight.common_points
+    parsedInsight.commonThemes ??
+    parsedInsight.common_themes ??
+    parsedInsight.commonPoints ??
+    parsedInsight.common_points
   );
   const generationDifferences = toList(
-    insight.generationDifferences ??
-    insight.generation_differences ??
-    insight.differences
+    parsedInsight.generationDifferences ??
+    parsedInsight.generation_differences ??
+    parsedInsight.differences
   );
   const conversationSuggestions = toList(
-    insight.conversationSuggestions ??
-    insight.conversation_suggestions ??
-    insight.suggestedDialogue ??
-    insight.suggested_dialogue
+    parsedInsight.conversationSuggestions ??
+    parsedInsight.conversation_suggestions ??
+    parsedInsight.suggestedDialogue ??
+    parsedInsight.suggested_dialogue
   );
 
   if (!commonThemes.length && !generationDifferences.length && !conversationSuggestions.length) {
@@ -69,48 +64,37 @@ const QuestionDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    const loadQuestionDetail = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await questionAPI.getQuestionDetail(id);
+        setQuestion(data);
+        setIsEditing(false);
+        setAnswerText('');
+      } catch (err) {
+        setError('질문을 불러오는데 실패했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
     loadQuestionDetail();
   }, [id]);
 
-  const loadQuestionDetail = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const data = await questionAPI.getQuestionDetail(id);
-      console.log('[Insight Debug] fetched question detail', {
-        familyQuestionId: id,
-        completed: data?.completed,
-        answersCount: data?.answers?.length,
-        insight: data?.insight,
-        insightJson: data?.insightJson,
-      });
-      setQuestion(data);
-      setIsEditing(false);
-      setAnswerText('');
-    } catch (err) {
-      setError('질문을 불러오는데 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSubmitAnswer = async (e) => {
     e.preventDefault();
-
     if (!answerText.trim()) {
       setError('답변을 입력해주세요.');
       return;
     }
-
     setSubmitting(true);
     setError(null);
-
     try {
       await questionAPI.submitAnswer(id, { content: answerText });
-      await loadQuestionDetail(); // 답변 후 데이터 새로고침
-      setAnswerText('');
+      const refreshed = await questionAPI.getQuestionDetail(id);
+      setQuestion(refreshed);
       setIsEditing(false);
+      setAnswerText('');
     } catch (err) {
       setError('답변 제출에 실패했습니다.');
     } finally {
@@ -120,38 +104,13 @@ const QuestionDetail = () => {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-  };
-
-  useEffect(() => {
-    if (!question) return;
-    const normalized = normalizeInsight(question.insight, question.insightJson);
-    console.log('[Insight Debug] normalized insight', {
-      familyQuestionId: question.familyQuestionId,
-      completed: question.completed,
-      rawInsight: question.insight,
-      rawInsightJson: question.insightJson,
-      normalizedInsight: normalized,
-    });
-  }, [question]);
-
-  const handleStartEdit = () => {
-    if (!question?.myAnswer) return;
-    setAnswerText(question.myAnswer.content);
-    setIsEditing(true);
-    setError(null);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setAnswerText('');
-    setError(null);
+    return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}.`;
   };
 
   if (loading) {
     return (
       <div className="container">
-        <div className="loading-spinner"></div>
+        <div className="loading-spinner" />
       </div>
     );
   }
@@ -159,169 +118,169 @@ const QuestionDetail = () => {
   if (!question) {
     return (
       <div className="container">
-        <div className="error-message">질문을 찾을 수 없습니다.</div>
+        <div className={styles.error}>질문을 찾을 수 없습니다.</div>
       </div>
     );
   }
 
   const isCompleted = Boolean(question.completed);
-  const questionTitle = question.questionText;
   const userAnswer = question.myAnswer;
   const showAnswerForm = !userAnswer || isEditing;
-  const showWaitingMessage = !isCompleted && Boolean(userAnswer);
   const normalizedInsight = normalizeInsight(question.insight, question.insightJson);
 
   return (
     <div className="container">
-      <div className="question-detail-page">
-        <button onClick={() => navigate('/questions')} className="back-button">
-          ← 목록으로 돌아가기
-        </button>
-
-        <div className="question-detail-header">
-          <div className="question-meta">
-            <span className="question-day">Day {question.sequenceNumber}</span>
-            <span className="question-date">{formatDate(question.assignedDate)}</span>
+      <div className={styles.page}>
+        <header className={styles.header}>
+          <button className={styles.back} onClick={() => navigate('/questions')}>
+            ← 목록으로
+          </button>
+          <div className={styles.meta}>
+            <span className={styles.day}>Day {question.sequenceNumber}</span>
+            <span className={styles.date}>{formatDate(question.assignedDate)}</span>
+            <span className={`${styles.status} ${isCompleted ? styles.statusDone : styles.statusProg}`}>
+              {isCompleted ? '모두 완료' : '진행중'}
+            </span>
           </div>
-          <div className={`question-status ${isCompleted ? 'status-completed' : 'status-progress'}`}>
-            {isCompleted ? '✅ 모든 답변 완료' : '⏳ 진행중'}
-          </div>
-        </div>
+        </header>
 
-        <div className="question-detail-content">
-          <h1 className="question-title">{questionTitle}</h1>
+        <section className={styles.questionCard}>
+          <p className={styles.label}>질문</p>
+          <h1 className={styles.question}>{question.questionText}</h1>
+        </section>
 
-          <div className="answer-submit-section">
-            <h3>나의 답변</h3>
-
-            {userAnswer && !isEditing && (
-              <div className="my-answer-section">
-                <div className="answer-card">
-                  <p className="answer-content">{userAnswer.content}</p>
-                  <div className="answer-footer">
-                    <span className="answer-time">
-                      {formatDate(userAnswer.createdAt)}
-                    </span>
-                    {!isCompleted && (
-                      <button
-                        type="button"
-                        className="btn-secondary edit-button"
-                        onClick={handleStartEdit}
-                      >
-                        답변 수정
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+        <section className={styles.answerCard}>
+          <div className={styles.answerHeader}>
+            <h3 className={styles.sectionTitle}>나의 답변</h3>
+            {userAnswer && !isEditing && !isCompleted && (
+              <button
+                type="button"
+                className={styles.secondary}
+                onClick={() => {
+                  setIsEditing(true);
+                  setAnswerText(userAnswer.content);
+                }}
+              >
+                수정하기
+              </button>
             )}
+          </div>
 
-            {showAnswerForm && (
-              <form onSubmit={handleSubmitAnswer}>
-                <textarea
-                  value={answerText}
-                  onChange={(e) => setAnswerText(e.target.value)}
-                  placeholder="답변을 입력해주세요..."
-                  className="answer-textarea"
-                  rows="6"
-                  disabled={submitting}
-                />
-                {error && <div className="error-message">{error}</div>}
-                <div className="answer-actions">
-                  {userAnswer && (
-                    <button
-                      type="button"
-                      className="btn-secondary cancel-button"
-                      onClick={handleCancelEdit}
-                      disabled={submitting}
-                    >
-                      취소
-                    </button>
-                  )}
+          {userAnswer && !isEditing && (
+            <div className={styles.answerBubble}>
+              <p className={styles.answerText}>{userAnswer.content}</p>
+              <span className={styles.answerTime}>{formatDate(userAnswer.createdAt)}</span>
+            </div>
+          )}
+
+          {showAnswerForm && (
+            <form onSubmit={handleSubmitAnswer} className={styles.form}>
+              <textarea
+                className={styles.textarea}
+                value={answerText}
+                onChange={(e) => setAnswerText(e.target.value)}
+                placeholder="가족에게 마음을 들려주세요."
+                rows={6}
+                disabled={submitting}
+              />
+              {error && <div className="error-message">{error}</div>}
+              <div className={styles.formActions}>
+                {userAnswer && (
                   <button
-                    type="submit"
-                    className="btn-primary submit-button"
+                    type="button"
+                    className={styles.ghost}
+                    onClick={() => {
+                      setIsEditing(false);
+                      setAnswerText('');
+                      setError(null);
+                    }}
                     disabled={submitting}
                   >
-                    {submitting ? '저장 중...' : userAnswer ? '답변 수정' : '답변 제출'}
+                    취소
                   </button>
-                </div>
-              </form>
-            )}
-          </div>
+                )}
+                <button type="submit" className={styles.primary} disabled={submitting}>
+                  {submitting ? '저장 중...' : userAnswer ? '답변 수정' : '답변 제출'}
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
 
-          {/* 다른 가족들의 답변 (완료 상태일 때만) */}
-          {isCompleted && question.answers && question.answers.length > 0 && (
-            <div className="all-answers-section">
-              <h3>가족들의 답변</h3>
-              <div className="answers-grid">
-                {question.answers.map((answer) => (
-                  <div key={answer.answerId} className="family-answer-card">
-                    <div className="answer-header">
-                      <span className="answer-author">
-                        {answer.userName}
-                        <span className="role-badge">
-                          {answer.roleType === 'FATHER' ? '아버지' :
-                           answer.roleType === 'MOTHER' ? '어머니' : '자녀'}
-                        </span>
-                      </span>
+        {isCompleted && question.answers && question.answers.length > 0 && (
+          <section className={styles.familySection}>
+            <div className={styles.sectionHeader}>
+              <h3 className={styles.sectionTitle}>가족들의 답변</h3>
+              <span className={styles.muted}>모두의 마음을 읽어보세요</span>
+            </div>
+            <div className={styles.answersGrid}>
+              {question.answers.map((answer) => (
+                <div key={answer.answerId} className={styles.familyCard}>
+                  <div className={styles.familyHead}>
+                    <span className={styles.avatar}>
+                      {answer.userName?.[0] || 'F'}
+                    </span>
+                    <div>
+                      <p className={styles.name}>{answer.userName}</p>
+                      <p className={styles.role}>
+                        {answer.roleType === 'FATHER'
+                          ? '아버지'
+                          : answer.roleType === 'MOTHER'
+                            ? '어머니'
+                            : '자녀'}
+                      </p>
                     </div>
-                    <p className="answer-content">{answer.content}</p>
                   </div>
-                ))}
-              </div>
+                  <p className={styles.answerText}>{answer.content}</p>
+                </div>
+              ))}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* AI 인사이트 (있을 경우) */}
-          {normalizedInsight && (
-            <div className="insight-section">
-              <h3>💡 AI 인사이트</h3>
-              <div className="insight-card">
-                {normalizedInsight.commonThemes.length > 0 && (
-                  <div className="insight-item">
-                    <h4>공통 주제</h4>
-                    <ul>
-                      {normalizedInsight.commonThemes.map((theme, index) => (
-                        <li key={index}>{theme}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {normalizedInsight.generationDifferences.length > 0 && (
-                  <div className="insight-item">
-                    <h4>세대별 차이</h4>
-                    <ul>
-                      {normalizedInsight.generationDifferences.map((diff, index) => (
-                        <li key={index}>{diff}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {normalizedInsight.conversationSuggestions.length > 0 && (
-                  <div className="insight-item">
-                    <h4>대화 제안</h4>
-                    <ul>
-                      {normalizedInsight.conversationSuggestions.map((suggestion, index) => (
-                        <li key={index}>{suggestion}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+        {normalizedInsight && (
+          <section className={styles.insightSection}>
+            <h3 className={styles.sectionTitle}>💡 AI 인사이트</h3>
+            <div className={styles.insightCard}>
+              {normalizedInsight.commonThemes.length > 0 && (
+                <div className={styles.insightItem}>
+                  <h4>공통 주제</h4>
+                  <ul>
+                    {normalizedInsight.commonThemes.map((theme, index) => (
+                      <li key={index}>{theme}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {normalizedInsight.generationDifferences.length > 0 && (
+                <div className={styles.insightItem}>
+                  <h4>세대별 차이</h4>
+                  <ul>
+                    {normalizedInsight.generationDifferences.map((diff, index) => (
+                      <li key={index}>{diff}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {normalizedInsight.conversationSuggestions.length > 0 && (
+                <div className={styles.insightItem}>
+                  <h4>대화 제안</h4>
+                  <ul>
+                    {normalizedInsight.conversationSuggestions.map((suggestion, index) => (
+                      <li key={index}>{suggestion}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          )}
+          </section>
+        )}
 
-          {/* 답변 대기 중 메시지 */}
-          {showWaitingMessage && (
-            <div className="waiting-message">
-              <p>다른 가족 구성원들의 답변을 기다리는 중입니다.</p>
-              <p className="hint">모든 가족이 답변을 완료하면 서로의 답변과 AI 인사이트를 확인할 수 있습니다.</p>
-            </div>
-          )}
-        </div>
+        {!isCompleted && userAnswer && (
+          <div className={styles.waiting}>
+            다른 가족들의 답변을 기다리는 중입니다. 모두 완료되면 서로의 답변과 인사이트가 열려요.
+          </div>
+        )}
       </div>
     </div>
   );

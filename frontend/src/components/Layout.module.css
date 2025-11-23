@@ -1,0 +1,77 @@
+.layout {
+  min-height: 100vh;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  background: rgba(242, 235, 226, 0.9);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+}
+
+.logo {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--color-text-strong);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.profileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 10px;
+  background: var(--color-surface);
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.profileText {
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.adminLink {
+  font-size: 14px;
+  color: var(--color-text-muted);
+  padding: 6px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+}
+
+.adminLink.active,
+.adminLink:hover,
+.adminActive {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.main {
+  flex: 1;
+  padding: var(--space-6) var(--space-4) 96px;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding: var(--space-7) var(--space-6) 112px;
+  }
+}

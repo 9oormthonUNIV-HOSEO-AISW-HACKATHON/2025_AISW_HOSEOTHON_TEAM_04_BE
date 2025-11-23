@@ -8,10 +8,10 @@ import AdminRoute from './components/AdminRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Family from './pages/Family';
 import Questions from './pages/Questions';
 import QuestionDetail from './pages/QuestionDetail';
 import AdminQuestions from './pages/AdminQuestions';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -27,7 +27,8 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
-              <Route path="/family" element={<Family />} />
+              <Route path="/family" element={<Settings />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/questions" element={<Questions />} />
               <Route path="/questions/:id" element={<QuestionDetail />} />
               <Route element={<AdminRoute />}>
